@@ -29,7 +29,28 @@ window.Speak = (function () {
   function refresh() { voice = pickVoice(); renderPickers(); }
   if ("speechSynthesis" in window) { refresh(); speechSynthesis.onvoiceschanged = refresh; }
 
+  // Audio pregenerado (tools/gen-audio.py): misma voz en todos los dispositivos. Fallback: voz del navegador.
+  let manifest = {}, audioBase = "";
+  (function loadManifest() {
+    const me = document.currentScript && document.currentScript.src;
+    audioBase = me ? me.replace(/speak\.js.*$/, "audio/") : "../assets/audio/";
+    fetch(audioBase + "manifest.json").then(r => r.ok ? r.json() : {}).then(m => { manifest = m; }).catch(() => {});
+  })();
+  let player = null;
+  function norm(t) { return t.replace(/\s+/g, " ").trim(); }
   function say(text, rate) {
+    const fn = manifest[norm(text)];
+    if (fn) {
+      if ("speechSynthesis" in window) speechSynthesis.cancel();
+      if (player) { player.pause(); }
+      player = new Audio(audioBase + fn);
+      player.playbackRate = rate && rate < 0.85 ? 0.9 : 1;
+      player.play().catch(() => sayTTS(text, rate));
+      return;
+    }
+    sayTTS(text, rate);
+  }
+  function sayTTS(text, rate) {
     if (!("speechSynthesis" in window)) return alert("Tu navegador no tiene voz. Usa Chrome.");
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
@@ -43,9 +64,10 @@ window.Speak = (function () {
     document.querySelectorAll("[data-voice-picker]").forEach(el => {
       const vs = voices().filter(v => /^en/i.test(v.lang));
       if (!vs.length) { el.textContent = "Sin voces en inglés disponibles."; return; }
+      const note = Object.keys(manifest).length ? '<div class="sidenote" style="position:static;width:auto;margin:0 0 .5rem">Las frases de la lección usan audio grabado (voz Sonia, británica). El selector solo afecta al texto que escribas tú.</div>' : "";
       const isChrome = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
       const hasGoogle = vs.some(v => /Google UK English Female/.test(v.name));
-      el.innerHTML = '<label style="font-family:var(--sans);font-size:.85rem;color:var(--muted)">Voz: <select></select></label>' +
+      el.innerHTML = note + '<label style="font-family:var(--sans);font-size:.85rem;color:var(--muted)">Voz: <select></select></label>' +
         (hasGoogle ? "" : '<div class="sidenote" style="position:static;width:auto;margin:.5rem 0 0">' +
           (isChrome ? 'La voz "Google UK English Female" no aparece: comprueba la conexión a internet.'
                     : 'Para una voz femenina británica de calidad abre esta lección en <strong>Google Chrome</strong> (voz "Google UK English Female").') + '</div>');
@@ -70,7 +92,7 @@ window.Speak = (function () {
   }
   function enhance(root) {
     (root || document).querySelectorAll("[data-say]").forEach(el => {
-      if (el.dataset.enhanced) return; el.dataset.enhanced = "1";
+      if (el.dataset.enhanced || el.hidden) return; el.dataset.enhanced = "1";
       const b = document.createElement("button"); b.className = "say"; b.type = "button"; b.title = "Escuchar";
       b.textContent = "escuchar"; b.onclick = () => say(el.dataset.say || el.textContent);
       el.after(b);
