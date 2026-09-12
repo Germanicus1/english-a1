@@ -26,3 +26,4 @@
 
 ## Publicación
 - GitHub Pages: https://germanicus1.github.io/english-a1/ (repo `Germanicus1/english-a1`, público, rama `pages`, ruta `/`). Cada lección nueva: commit + push a `pages` (solo cuando Peter lo pida). Carmen lo abre en Safari en el iPhone.
+- **Audio pregenerado** (decisión 2026-09-12): las voces del navegador en iPhone/Mac sonaban rotas → cada frase se genera como mp3 con `tools/gen-audio.py` (edge-tts, voz `en-GB-SoniaNeural`, rate −15%) en `assets/audio/` + `manifest.json`. speak.js reproduce el mp3 y solo usa TTS del navegador para texto dinámico. **Después de escribir cada lección nueva: ejecutar el script antes de commit.** Venv: `/private/tmp/…/scratchpad/tts` (temporal; recrear con `python3 -m venv ~/.venvs/tts && ~/.venvs/tts/bin/pip install edge-tts` si desaparece).
