@@ -23,3 +23,6 @@
 
 ## Registro de sesiones
 - 2026-09-12: sesión 0. Misión, recursos, assets, lección 0001 (presentarse). Correcciones mid-sesión: trabajo actual limpieza hospital → meta event manager; alumna es Carmen, no Peter.
+
+## Publicación
+- GitHub Pages: https://germanicus1.github.io/english-a1/ (repo `Germanicus1/english-a1`, público, rama `pages`, ruta `/`). Cada lección nueva: commit + push a `pages` (solo cuando Peter lo pida). Carmen lo abre en Safari en el iPhone.
